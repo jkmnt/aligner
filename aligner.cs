@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 using CamBam.UI;
@@ -82,8 +83,6 @@ namespace Aligner
             Align_mode hor = mode & Align_mode.HMASK;
             Align_mode vert = mode & Align_mode.VMASK;
 
-//          Host.log("vert = {0}, hor = {1}", vert, hor);
-
             if (hor == Align_mode.RIGHTS_TO_LEFT)
                 dx = anchor[0].X - ebb[1].X;
             else if (hor == Align_mode.LEFTS)
@@ -106,15 +105,15 @@ namespace Aligner
             else if (vert == Align_mode.BOTS_TO_TOP)
                 dy = anchor[1].Y - ebb[0].Y;
 
-//          Host.log("dx = {0}, dy = {1}", dx, dy);
+            //
+            if (Math.Abs(dx) < 1E-8) dx = 0;
+            if (Math.Abs(dy) < 1E-8) dy = 0;
 
             obj.ApplyTransformation(Matrix4x4F.Translation(dx, dy, 0));
         }
 
         static public void align(Align_mode align_mode, Anchor_mode anchor_mode)
         {
-//          Host.log("anchor = {0}", anchor_mode);
-
             List<Entity> to_align = new List<Entity>();
 
             foreach (object e in ui.ActiveView.SelectedEntities)
