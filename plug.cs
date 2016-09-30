@@ -45,17 +45,17 @@ namespace Aligner
                 item.Click += click_handler;
             }
 
-            item = ts.Items.Add("L");
+            item = ts.Items.Add(null, Properties.Resources.L, click_handler);
             item.Tag = Align_mode.LEFTS;
-            item.Click += click_handler;
+            item.ToolTipText = TextTranslation.Translate("Align To Left");
 
-            item = ts.Items.Add("C");
+            item = ts.Items.Add(null, Properties.Resources.C, click_handler);
             item.Tag = Align_mode.HCENTER;
-            item.Click += click_handler;
+            item.ToolTipText = TextTranslation.Translate("Center Horizontally");
 
-            item = ts.Items.Add("R");
+            item = ts.Items.Add(null, Properties.Resources.R, click_handler);
             item.Tag = Align_mode.RIGHTS;
-            item.Click += click_handler;
+            item.ToolTipText = TextTranslation.Translate("Align To Right");
 
             if (show_extra_aligns)
             {
@@ -71,17 +71,17 @@ namespace Aligner
                 item.Click += click_handler;
             }
 
-            item = ts.Items.Add("T");
+            item = ts.Items.Add(null, Properties.Resources.T, click_handler);
             item.Tag = Align_mode.TOPS;
-            item.Click += click_handler;
+            item.ToolTipText = TextTranslation.Translate("Align To Top");
 
-            item = ts.Items.Add("M");
+            item = ts.Items.Add(null, Properties.Resources.M, click_handler);
             item.Tag = Align_mode.VMIDDLE;
-            item.Click += click_handler;
+            item.ToolTipText = TextTranslation.Translate("Center Vertically");
 
-            item = ts.Items.Add("B");
+            item = ts.Items.Add(null, Properties.Resources.B, click_handler);
             item.Tag = Align_mode.BOTS;
-            item.Click += click_handler;
+            item.ToolTipText = TextTranslation.Translate("Align To Bottom");
 
             if (show_extra_aligns)
             {
@@ -95,12 +95,14 @@ namespace Aligner
             anchor_selector.Items.Add(TextTranslation.Translate("To First Sel"));
             anchor_selector.Items.Add(TextTranslation.Translate("To Selection"));
             anchor_selector.Items.Add(TextTranslation.Translate("To Drawing"));
+            anchor_selector.Items.Add(TextTranslation.Translate("To Origin"));
             anchor_selector.Items.Add(TextTranslation.Translate("To Stock"));
 
             anchor_selector.AutoSize = false;
             anchor_selector.Width = 90;
             anchor_selector.DropDownStyle = ComboBoxStyle.DropDownList;
             anchor_selector.SelectedIndex = 0;
+            anchor_selector.ToolTipText = TextTranslation.Translate("Align Relative To ...");
 
             ts.Items.Add(anchor_selector);
 

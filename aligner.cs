@@ -14,6 +14,7 @@ namespace Aligner
         FIRST_SELECTED,
         ALL_SELECTED,
         DRAWING,
+        ORIGIN,
         STOCK,
     }
 
@@ -154,6 +155,10 @@ namespace Aligner
                         all.Add(e);
                 }
                 anchor = get_bb(all.ToArray());
+            }
+            else if (anchor_mode == Anchor_mode.ORIGIN)
+            {
+                anchor = new Point2F[] { new Point2F(0, 0), new Point2F(0, 0) };
             }
             else if (anchor_mode == Anchor_mode.STOCK)
             {
