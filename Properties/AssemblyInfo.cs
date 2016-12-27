@@ -8,7 +8,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyTitle("align toolbar")]
 [assembly: AssemblyDescription("CamBam align toolbar plugin")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("FWD")]
+[assembly: AssemblyCompany("jk")]
 [assembly: AssemblyProduct("align toolbar")]
 [assembly: AssemblyCopyright("Copyright © FWD 2016")]
 [assembly: AssemblyTrademark("")]
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.1.0.0")]
-[assembly: AssemblyFileVersion("1.1.0.0")]
+[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyFileVersion("1.2.0.0")]

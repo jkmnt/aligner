@@ -39,47 +39,82 @@ namespace Aligner
 
     class Aligner
     {
+        private class Primitive : List<Entity>
+        {
+            public readonly string Name;
+
+            private Point2F[] _obj_bb(Entity obj)
+            {
+                Point3F min = Point3F.Undefined;
+                Point3F max = Point3F.Undefined;
+                obj.GetExtrema(ref min, ref max);
+                return new Point2F[] { (Point2F)min, (Point2F)max };                
+            }
+
+            public Point2F[] Get_bbox()
+            {
+                Point2F[] bb = { Point2F.Undefined, Point2F.Undefined };
+
+                foreach (Entity e in this)
+                {                    
+                    Point2F[] ebb = _obj_bb(e);
+                    if (bb[0].IsUndefined)
+                    {
+                        bb = ebb;
+                    }
+                    else
+                    {
+                        if (ebb[0].X < bb[0].X) bb[0].X = ebb[0].X;
+                        if (ebb[0].Y < bb[0].Y) bb[0].Y = ebb[0].Y;
+                        if (ebb[1].X > bb[1].X) bb[1].X = ebb[1].X;
+                        if (ebb[1].Y > bb[1].Y) bb[1].Y = ebb[1].Y;
+                    }
+                }
+                return bb;
+            }
+
+            public Primitive(string name)
+            {
+                Name = name;
+            }
+        }
+
+        private class Primitives_collection : List<Primitive>
+        {
+            public Point2F[] Get_bbox()
+            {
+                Point2F[] bb = { Point2F.Undefined, Point2F.Undefined };
+
+                foreach (Primitive e in this)
+                {
+                    Point2F[] ebb = e.Get_bbox();
+                    if (bb[0].IsUndefined)
+                    {
+                        bb = ebb;
+                    }
+                    else
+                    {
+                        if (ebb[0].X < bb[0].X) bb[0].X = ebb[0].X;
+                        if (ebb[0].Y < bb[0].Y) bb[0].Y = ebb[0].Y;
+                        if (ebb[1].X > bb[1].X) bb[1].X = ebb[1].X;
+                        if (ebb[1].Y > bb[1].Y) bb[1].Y = ebb[1].Y;
+                    }
+                }
+                return bb;
+            }
+        }
+
         static CamBamUI ui
         {
             get { return CamBamUI.MainUI; }
         }
 
-        static Point2F[] get_bb(Entity obj)
-        {
-            Point3F min = Point3F.Undefined;
-            Point3F max = Point3F.Undefined;
-            obj.GetExtrema(ref min, ref max);
-            return new Point2F[] { new Point2F(min.X, min.Y), new Point2F(max.X, max.Y)};
-        }
-
-        static Point2F[] get_bb(Entity[] objs)
-        {
-            Point2F[] bb = {Point2F.Undefined, Point2F.Undefined};
-
-            foreach (Entity e in objs)
-            {
-                Point2F[] ebb = get_bb(e);
-                if (bb[0].IsUndefined)
-                {
-                    bb = ebb;
-                }
-                else
-                {
-                    if (ebb[0].X < bb[0].X) bb[0].X = ebb[0].X;
-                    if (ebb[0].Y < bb[0].Y) bb[0].Y = ebb[0].Y;
-                    if (ebb[1].X > bb[1].X) bb[1].X = ebb[1].X;
-                    if (ebb[1].Y > bb[1].Y) bb[1].Y = ebb[1].Y;
-                }
-            }
-            return bb;
-        }
-
-        static void align_object(Entity obj, Point2F[] anchor, Align_mode mode)
+        static void align_primitive(Primitive primitive, Point2F[] anchor, Align_mode mode)
         {
             double dx = 0;
             double dy = 0;
 
-            Point2F[] ebb = get_bb(obj);
+            Point2F[] ebb = primitive.Get_bbox();
 
             Align_mode hor = mode & Align_mode.HMASK;
             Align_mode vert = mode & Align_mode.VMASK;
@@ -110,51 +145,68 @@ namespace Aligner
             if (Math.Abs(dx) < 1E-8) dx = 0;
             if (Math.Abs(dy) < 1E-8) dy = 0;
 
-            obj.ApplyTransformation(Matrix4x4F.Translation(dx, dy, 0));
+            foreach (Entity e in primitive)                                            
+                e.ApplyTransformation(Matrix4x4F.Translation(dx, dy, 0));            
         }
 
         static public void align(Align_mode align_mode, Anchor_mode anchor_mode)
         {
-            List<Entity> to_align = new List<Entity>();
+            Primitives_collection primitives = new Primitives_collection();
 
-            foreach (object e in ui.ActiveView.SelectedEntities)
+            foreach (object obj in ui.ActiveView.SelectedEntities)
             {
-                if (e is Entity)
-                    to_align.Add((Entity)e);
+                if (obj is Entity)
+                {
+                    Entity e = (Entity)obj;
+                    Primitive pr = null;
+                    string tag = null;
+
+                    if (e.Tag != null && e.Tag.StartsWith("Group"))
+                    {
+                        tag = e.Tag;
+                        pr = primitives.Find(x => x.Name == e.Tag);
+                    }
+
+                    if (pr == null)
+                        pr = new Primitive(tag);
+
+                    pr.Add(e);
+                    primitives.Add(pr);
+                }
             }
 
-            if (to_align.Count < 1) return;
+            if (primitives.Count < 1) return;
 
             Point2F[] anchor;
 
             if (anchor_mode == Anchor_mode.ALL_SELECTED)
             {
-                anchor = get_bb(to_align.ToArray());
+                anchor = primitives.Get_bbox();
             }
             else if (anchor_mode == Anchor_mode.FIRST_SELECTED)
             {
-                if (to_align.Count < 2) return;
+                if (primitives.Count < 2) return;
 
-                anchor = get_bb(to_align[0]);
-                to_align.RemoveAt(0);
+                anchor = primitives[0].Get_bbox();
+                primitives.RemoveAt(0);
             }
             else if (anchor_mode == Anchor_mode.LAST_SELECTED)
             {
-                if (to_align.Count < 2) return;
+                if (primitives.Count < 2) return;
 
-                int last = to_align.Count - 1;
-                anchor = get_bb(to_align[last]);
-                to_align.RemoveAt(last);
+                int last = primitives.Count - 1;
+                anchor = primitives[last].Get_bbox();
+                primitives.RemoveAt(last);
             }
             else if (anchor_mode == Anchor_mode.DRAWING)
             {
-                List<Entity> all = new List<Entity>();
+                Primitive all = new Primitive(null);                
                 foreach (Layer layer in ui.ActiveView.CADFile.Layers)
                 {
                     foreach (Entity e in layer.Entities)
                         all.Add(e);
                 }
-                anchor = get_bb(all.ToArray());
+                anchor = all.Get_bbox();
             }
             else if (anchor_mode == Anchor_mode.ORIGIN)
             {
@@ -177,10 +229,12 @@ namespace Aligner
             ui.ActiveView.CADFile.Modified = true;
             ui.UndoBuffer.AddUndoPoint("Aligner Plugin");
 
-            foreach (Entity e in to_align)
+            foreach (Primitive primitive in primitives)
             {
-                ui.UndoBuffer.Add(e);
-                align_object(e, anchor, align_mode);
+                foreach (Entity e in primitive)
+                    ui.UndoBuffer.Add(e);
+
+                align_primitive(primitive, anchor, align_mode);
             }
 
             ui.ActiveView.Selection.RefreshExtrema();
